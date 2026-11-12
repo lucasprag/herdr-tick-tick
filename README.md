@@ -2,6 +2,8 @@
 
 **Your TickTick tasks in a [Herdr](https://herdr.dev) side panel, next to your terminals.**
 
+![The TickTick panel in Herdr, on its Today tab](app/preview.png)
+
 The panel shows one view at a time. A view is a saved query (`due:today`,
 `list:smile`, `pri:high tag:errands`), and each one is a tab with its task
 count. Tasks show in sections, as in the app: a view on one list shows that
@@ -11,6 +13,12 @@ priority unless you pick another order.
 
 From the panel you can complete a task, add one, and change a task's list,
 due date, priority and checklist. You can also open it in TickTick.
+
+| A list's own sections | A task |
+|---|---|
+| ![The Work tab, grouped by the list's sections](docs/screenshots/work-sections.png) | ![A task's page, with its list, section, due date, priority and checklist](docs/screenshots/task.png) |
+
+The screenshots show made-up tasks.
 
 ## Requirements
 
