@@ -3,7 +3,7 @@ process.env.TZ = "America/Toronto";
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseQuery, parseDate, dayNumber, dueDay, dateSection, sortTasks, sections, findList, tokenize, splitValues } from "../app/mods/tick-tick/query.js";
+import { parseQuery, parseDate, dayNumber, dueDay, dateSection, sortTasks, sections, findList, tokenize, splitValues, defaultsFor, allDay, dueLabel } from "../app/mods/tick-tick/query.js";
 
 // Thursday, Nov 12, 2026, 10:00 in Toronto.
 const NOW = dayNumber(Date.UTC(2026, 10, 12, 15));
@@ -131,4 +131,27 @@ test("findList: exact name first, then contains; inbox", () => {
   assert.equal(findList(projects, "ops").id, "1");
   assert.equal(findList(projects, "inbox").id, "inbox1");
   assert.equal(findList(projects, "nope"), null);
+});
+
+test("defaultsFor: what a task added in a view starts with", () => {
+  assert.deepEqual(defaultsFor("due:today"), { list: null, priority: null, tags: [], due: 0 });
+  assert.deepEqual(defaultsFor("list:smile pri:high tag:a"), { list: "smile", priority: 5, tags: ["a"], due: null });
+  assert.equal(defaultsFor("due:tomorrow").due, 1);
+  assert.equal(defaultsFor("list:a,b").list, null);
+  assert.equal(defaultsFor("-list:smile").list, null);
+});
+
+test("allDay: local midnight, as TickTick writes it", () => {
+  assert.deepEqual(allDay(NOW), { startDate: "2026-11-12T05:00:00+0000", dueDate: "2026-11-12T05:00:00+0000", isAllDay: true });
+  assert.equal(dueDay({ dueDate: allDay(NOW + 3).dueDate }), NOW + 3);
+});
+
+test("dueLabel", () => {
+  assert.equal(dueLabel(task({ dueDate: due(12), isAllDay: true }), NOW), "Today");
+  assert.equal(dueLabel(task({ dueDate: due(13), isAllDay: true }), NOW), "Tomorrow");
+  assert.equal(dueLabel(task({ dueDate: due(11), isAllDay: true }), NOW), "Yesterday");
+  assert.equal(dueLabel(task({ dueDate: due(16), isAllDay: true }), NOW), "Mon");
+  assert.equal(dueLabel(task({ dueDate: due(3), isAllDay: true }), NOW), "Nov 3");
+  assert.equal(dueLabel(task({ dueDate: "2026-11-12T19:30:00.000+0000", isAllDay: false }), NOW), "Today 14:30");
+  assert.equal(dueLabel(task({}), NOW), "");
 });

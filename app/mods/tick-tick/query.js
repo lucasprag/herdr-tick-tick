@@ -212,6 +212,68 @@ export function parseQuery(text) {
   return { test: (task, ctx) => tests.every((t) => t(task, ctx)), list: lists.length === 1 ? lists[0] : null, error: null };
 }
 
+/**
+ * What a task added in this view starts with, so it shows in the view: the
+ * one list, one priority, the tags and a due day (today for due:today or
+ * due:overdue, tomorrow for due:tomorrow) the query names.
+ * Returns { list, priority, tags, due } (due a day offset from today, or null).
+ */
+export function defaultsFor(text) {
+  const out = { list: null, priority: null, tags: [], due: null };
+  if (parseQuery(text).error) return out;
+  for (const raw of tokenize(text)) {
+    const tok = readToken(raw);
+    if (tok.neg) continue;
+    const vals = tok.values.map((v) => v.toLowerCase());
+    if (tok.kind === "list" && tok.values.length === 1) out.list = tok.values[0];
+    if (tok.kind === "priority" && vals.length === 1) out.priority = PRIORITIES[vals[0]];
+    if (tok.kind === "tag") out.tags.push(...tok.values);
+    if (tok.kind === "due") {
+      if (vals.some((v) => v === "today" || v === "overdue" || v === "week")) out.due = 0;
+      else if (vals.includes("tomorrow")) out.due = 1;
+    }
+  }
+  return out;
+}
+
+const pad = (n) => String(n).padStart(2, "0");
+
+/** TickTick's date text for an instant: "2026-11-12T05:00:00+0000". */
+export function formatDate(ms) {
+  const d = new Date(ms);
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}+0000`;
+}
+
+/** The fields that make a task due all day on a day number (local midnight). */
+export function allDay(day) {
+  const d = new Date(day * DAY_MS);
+  const date = formatDate(new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()).getTime());
+  return { startDate: date, dueDate: date, isAllDay: true };
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** "Today", "Tomorrow", "Yesterday", "Mon" within the week, else "Nov 3" (and the
+ *  year when it isn't this one); a time after it for a task that isn't all day. */
+export function dueLabel(task, now) {
+  const ms = parseDate(task?.dueDate) ?? parseDate(task?.startDate);
+  if (ms === null) return "";
+  const d = new Date(ms);
+  const diff = dayNumber(ms) - now;
+  let text;
+  if (diff === 0) text = "Today";
+  else if (diff === 1) text = "Tomorrow";
+  else if (diff === -1) text = "Yesterday";
+  else if (diff > 1 && diff <= 6) text = WEEKDAYS[d.getDay()];
+  else {
+    text = `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+    if (d.getFullYear() !== new Date(now * DAY_MS).getUTCFullYear()) text += `, ${d.getFullYear()}`;
+  }
+  if (task.isAllDay === false) text += ` ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return text;
+}
+
 /** The list a name from a query means: the exact name first, then the first that contains it. */
 export function findList(projects, name) {
   if (!name) return null;
