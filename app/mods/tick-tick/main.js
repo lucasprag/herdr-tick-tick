@@ -49,7 +49,7 @@ export default class TickTickPanel extends View {
 
     this.refresh(cx);
     cx.timer.every(REFRESH_MS, (cx) => this.refresh(cx));
-    // keys.json / `herdr-app do`: tick-tick.refresh, .add, .search, .back,
+    // keys.json / `herdr-app do`: tick-tick.refresh, .open:<id>, .add, .search, .back,
     // .help, .settings, .view:<name>, .add-view:<name>=<query>.
     cx.spawn(async (cx) => {
       for (;;) {
@@ -65,6 +65,7 @@ export default class TickTickPanel extends View {
     const name = i < 0 ? c : c.slice(0, i);
     const arg = i < 0 ? "" : c.slice(i + 1);
     if (name === "refresh") this.refresh(cx);
+    else if (name === "open" && arg) this.openTask(arg, cx);
     else if (name === "back") this.back(cx);
     else if (name === "help") this.page = "help";
     else if (name === "settings") this.openSettings(cx);
