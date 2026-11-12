@@ -3,7 +3,6 @@
 
 import { div } from "gpui-kit";
 import { v_flex, h_flex, Input, InputState } from "gpui-base";
-import { run } from "herdr";
 import { SYNTAX, parseQuery } from "./query.js";
 import * as ticktick from "./ticktick.js";
 import { icon, iconButton, button } from "./ui.js";
@@ -134,22 +133,18 @@ export function setupPage(view, t) {
   const intro = p.kind === "token"
     ? [
       div().text_size(13).font_semibold().text_color(t.foreground).child("Connect TickTick"),
-      div().text_size(12).text_color(t.muted).child("The panel reads TickTick with a personal API token, kept in your Keychain. Create one in TickTick's web app: your avatar, Settings, Account, API Token."),
+      div().text_size(12).text_color(t.muted).child("The panel reads TickTick with a personal API token. Create one in TickTick's web app: your avatar, Settings, Account, API Token."),
     ]
     : [
       div().text_size(13).font_semibold().text_color(t.foreground).child("TickTick refused the token"),
-      div().text_size(12).text_color(t.muted).child("The token in your Keychain was revoked or mistyped. Create a new one in TickTick's web app: your avatar, Settings, Account, API Token."),
+      div().text_size(12).text_color(t.muted).child(`The token in $${ticktick.TOKEN_VAR} was revoked or mistyped. Create a new one in TickTick's web app: your avatar, Settings, Account, API Token.`),
     ];
   return v_flex().size_full().min_h(0)
     .child(h_flex().h(42).flex_none().px(14).items_center().border_b(1).border_color(t.border)
       .child(div().font_semibold().text_color(t.foreground).child("TickTick")))
     .child(v_flex().px(14).py(14).gap(8).children(intro)
-      .child(div().text_size(12).text_color(t.muted).child("Then run this in a terminal and paste the token when it asks (it isn't shown or saved in your shell history):"))
-      .child(code(t, ticktick.SAVE_TOKEN))
+      .child(div().text_size(12).text_color(t.muted).child("Then export it from a file your shell reads, such as ~/.zshrc or a secrets file it sources:"))
+      .child(code(t, `export ${ticktick.TOKEN_VAR}="your token"`))
       .when(p.kind !== "token", (el) => el.child(div().text_size(11.5).text_color(t.dim).child(p.message)))
-      .child(h_flex().pt(4).gap(8)
-        .child(again)
-        .child(button(t, "tt-save-token", "Run it in a new tab", () => {
-          run("tab.new", { name: "TickTick token", argv: ["/bin/sh", "-c", `${ticktick.SAVE_TOKEN} && echo "Saved. Click Check again in the TickTick panel."; exec "$SHELL"`] });
-        }))));
+      .child(h_flex().pt(4).gap(8).child(again)));
 }

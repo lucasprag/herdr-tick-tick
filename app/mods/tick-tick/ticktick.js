@@ -1,15 +1,13 @@
 // The panel's only way to TickTick: its Open API (developer.ticktick.com) with
-// a personal API token. The token lives in the macOS Keychain; the panel reads
-// it from there each start and never writes it anywhere.
+// a personal API token from $TICKTICK_TOKEN. The panel never stores it.
 
 import { exec } from "herdr";
 
 const API = "https://api.ticktick.com/open/v1";
-export const KEYCHAIN = { service: "herdr-tick-tick", account: "token" };
-export const SAVE_TOKEN = `security add-generic-password -U -s ${KEYCHAIN.service} -a ${KEYCHAIN.account} -w`;
+export const TOKEN_VAR = "TICKTICK_TOKEN";
 
 // Why a call failed, so the panel can say what to do about it.
-//   token: no token in the Keychain     auth: TickTick refused the token
+//   token: $TICKTICK_TOKEN isn't set    auth: TickTick refused the token
 //   network: TickTick unreachable/busy  api: TickTick answered with an error
 export class TickTickError extends Error {
   constructor(kind, message) {
@@ -20,15 +18,22 @@ export class TickTickError extends Error {
 
 let token = null;
 
+// The app's environment first; then the person's interactive shell, which
+// reads the rc files (where ~/.zshrc sources secrets). Markers keep anything
+// else the rc files print out of the token.
 async function readToken() {
   if (token) return token;
-  const r = await exec("/usr/bin/security", ["find-generic-password", "-s", KEYCHAIN.service, "-a", KEYCHAIN.account, "-w"]);
-  const found = r.stdout.trim();
-  if (r.code !== 0 || !found) throw new TickTickError("token", "No TickTick token in the Keychain.");
+  const env = await exec("/usr/bin/printenv", [TOKEN_VAR]).catch(() => null);
+  let found = env?.code === 0 ? env.stdout.trim() : "";
+  if (!found) {
+    const r = await exec("/bin/sh", ["-c", `"\${SHELL:-/bin/zsh}" -ic 'printf "<<%s>>" "$${TOKEN_VAR}"'`]).catch(() => null);
+    found = /<<([^<>]*)>>/.exec(r?.stdout ?? "")?.[1]?.trim() ?? "";
+  }
+  if (!found) throw new TickTickError("token", `$${TOKEN_VAR} isn't set.`);
   return (token = found);
 }
 
-/** Forgets the token, so "Check again" reads the Keychain afresh. */
+/** Forgets the token, so "Check again" reads it afresh. */
 export function forget() {
   token = null;
 }
