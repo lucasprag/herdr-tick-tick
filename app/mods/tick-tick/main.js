@@ -134,12 +134,16 @@ export default class TickTickPanel extends View {
     return p;
   }
 
+  // Inbox tasks carry the Inbox's real id ("inbox115…"); an empty Inbox
+  // doesn't say it, so the Inbox list may only know itself as "inbox".
   listOf(task) {
-    return this.data?.lists.find((l) => l.id === task.projectId) ?? null;
+    const lists = this.data?.lists ?? [];
+    if (String(task.projectId).startsWith("inbox")) return lists.find((l) => l.inbox) ?? null;
+    return lists.find((l) => l.id === task.projectId) ?? null;
   }
 
   listName(task) {
-    return this.listOf(task)?.name ?? (String(task.projectId).startsWith("inbox") ? "Inbox" : "");
+    return this.listOf(task)?.name ?? "";
   }
 
   taskById(id) {

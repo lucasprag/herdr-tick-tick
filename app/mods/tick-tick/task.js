@@ -69,7 +69,7 @@ function dueMenu(view, t, task) {
 }
 
 function listMenu(view, t, task) {
-  return menuFrame(t, "tt-list-picker", view.data.lists.map((l) => option(t, `tt-list-${l.id}`, l.id === task.projectId,
+  return menuFrame(t, "tt-list-picker", view.data.lists.map((l) => option(t, `tt-list-${l.id}`, l === view.listOf(task),
     [icon("list").size(13).flex_none().text_color(l.color ?? t.dim), plain(t, l.name)],
     (cx) => view.moveTo(task, l.id, cx))));
 }
