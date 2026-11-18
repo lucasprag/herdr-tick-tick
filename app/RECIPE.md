@@ -11,7 +11,7 @@ The panel fills a block, normally a side panel stack about 368px wide. It sits o
   - **Search box**, 30px tall, filled `#ffffff06` (`#00000008` on light themes). It has a magnifier, the placeholder "Search tasks", and an `x` to clear it.
   - **View tabs**, 28px tall, each taking an equal share. Each tab shows its name (12; `foreground` and medium weight when selected) and its count (11.5, `dim`). The selected and hovered tabs get `#ffffff10`. A `+` at the end adds a view.
   - **A 28px row** with two parts:
-    - **"Add a task":** a bordered input with a plus icon. The target list's name shows dim at its right, or a spinner while it saves.
+    - **"Add a task":** a bordered input with a priority flag at its left, in the next task's priority color; clicking it opens the same priority menu as the task page. The target list's name shows dim at its right, or a spinner while it saves.
     - **Sort:** a bordered dropdown with a sort icon, the current sort's label and a chevron. Its 160px menu offers Priority, Due date, Title and Manual, with a check by the current one.
 - **The list** scrolls.
   - **Section header**, 30px, filled faint: a chevron, the name (semibold) and the count (`dim`). Click it to collapse the section; collapsing is remembered per view.
@@ -25,15 +25,16 @@ The panel fills a block, normally a side panel stack about 368px wide. It sits o
   - **Empty states** (12, `dim`): "Loading tasks…", "Nothing here. Enjoy the free time.", "No tasks match the search." A query error shows in `blocked`.
 - **Task page:**
   - A 42px header with a back chevron, the list's name and an open-in-TickTick button.
-  - A checkbox beside the title (15, semibold).
+  - A checkbox beside the title (15, semibold, 20px lines).
   - Label/value lines with 76px labels in `dim`:
     - List: a picker of every list
     - Section: only when the task is in one
     - Due: a picker with Today, Tomorrow, Next week and No date
     - Priority: a picker with flag icons
     - Tags: bordered chips
-  - "Checklist" with a done/total count and a checkbox per item.
-  - "Notes" as plain text, line by line ("No notes." when empty).
+  - "Checklist" with a done/total count and a checkbox per item (12.5, 18px lines).
+  - "Notes" as plain text, line by line (12.5, 18px lines, "Add notes" in `dim` when empty).
+  - The title, each item and the notes edit in place: a click swaps the text for a textarea with the same font, line height and box, so nothing moves. Enter saves a title or an item, Cmd-Enter saves the notes, losing focus saves, Escape cancels.
   - An "Open in TickTick" button.
   - A save error shows in `blocked` under the title.
 - **Settings page:**
@@ -55,13 +56,13 @@ The panel fills a block, normally a side panel stack about 368px wide. It sits o
 - **Views:** a query is parsed once and cached. Tabs count their tasks before the search applies; the header count is after it.
 - **Add:** Enter creates the task with these fields:
   - **List:** the view's one list, else the Inbox.
-  - **Priority:** the view's single `pri:`, if it has one.
+  - **Priority:** the one picked with the flag, else the view's single `pri:`, if it has one. The pick resets after each add.
   - **Tags:** the view's `tag:`s.
   - **Due:** all-day today for `due:today`, `overdue` or `week`; all-day tomorrow for `due:tomorrow`.
   - The answer is added to the data at once.
 - **Complete:** the line checks itself and dims, the API is told, and 600ms later the line goes. A repeating task makes the panel load again, because its next occurrence comes back.
 - **Edits:** these show at once, then take TickTick's answer; a failure puts the old values back and shows the error.
-  - Priority, due date and checklist are `POST /task/{id}` with `id`, `projectId` and the changed fields.
+  - Title, priority, due date, checklist and notes are `POST /task/{id}` with `id`, `projectId` and the changed fields; TickTick keeps the rest. Notes are `desc` on a CHECKLIST task and `content` on any other.
   - Moving to another list is `POST /task/move`.
 - **Problems:**
   - With no token, or a 401, the first-run page shows.
@@ -98,4 +99,6 @@ The panel fills a block, normally a side panel stack about 368px wide. It sits o
 - Clicking a checkbox completes the task in TickTick, and it leaves the list.
 - Typing a title in Add a task on the Work tab adds it to the Smile list.
 - Changing a task's priority on its page recolors its checkbox.
+- Clicking a task's title, a checklist item or its notes edits it without moving anything, and the change shows in TickTick.
+- Picking High with the flag in Add a task adds a high-priority task.
 - With `TICKTICK_TOKEN` unset, Check again shows "Connect TickTick".

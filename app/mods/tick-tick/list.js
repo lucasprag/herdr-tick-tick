@@ -3,9 +3,9 @@
 
 import { div } from "gpui-kit";
 import { v_flex, h_flex, Input, Popover } from "gpui-base";
-import { SORTS, sections, dueLabel, today, dateSection } from "./query.js";
+import { SORTS, sections, dueLabel, today, dateSection, defaultsFor, PRIORITY_LABELS } from "./query.js";
 import { readPrefs, writePrefs, selectedView, setSort } from "./prefs.js";
-import { icon, iconButton, checkbox, faint, faintOn } from "./ui.js";
+import { icon, iconButton, checkbox, faint, faintOn, flag, priorityMenu } from "./ui.js";
 
 function header(view, t, count) {
   return h_flex().h(42).flex_none().pl(14).pr(8).gap(8).items_center().border_b(1).border_color(t.border)
@@ -74,9 +74,25 @@ function addRow(view, t, current) {
     .on_open_change((open, cx) => { view.sortOpen = open; cx.notify(); })
     .trigger(trigger)
     .content(sortMenu(view, t, current));
+  const priority = view.addPriority ?? defaultsFor(current.query).priority ?? 0;
+  const priorityPicker = Popover.new("tt-add-priority").anchor("top_left")
+    .open(view.addPriorityOpen)
+    .on_open_change((open, cx) => { view.addPriorityOpen = open; cx.notify(); })
+    .trigger(h_flex().id("tt-add-priority-trigger").size(20).ml(-4).flex_none().items_center().justify_center().cursor_pointer()
+      .hover((s) => s.bg(t.hover))
+      .tooltip(`Priority: ${PRIORITY_LABELS[priority]}`)
+      .child(flag(t, priority)))
+    .content(view.addPriorityOpen
+      ? priorityMenu(t, "tt-add-priority-menu", priority, (p, cx) => {
+        view.addPriority = p;
+        view.addPriorityOpen = false;
+        view.add.focus();
+        cx.notify();
+      })
+      : div());
   const add = h_flex().id("tt-add").flex_1().min_w(0).h(28).px(8).gap(6).items_center().border_1().border_color(t.border)
     .on_click(() => view.add.focus())
-    .child(icon("plus").size(13).flex_none().text_color(t.dim))
+    .child(priorityPicker)
     .child(Input.new(view.add).flex_1().h_full().text_size(12.5).text_color(t.foreground))
     .when(view.adding, (el) => el.child(icon("refresh").size(12).flex_none().text_color(t.dim).spin(900)))
     .when(Boolean(target) && !view.adding, (el) => el.child(div().flex_none().max_w(90).truncate().text_size(11.5).text_color(t.dim).child(target.name)));

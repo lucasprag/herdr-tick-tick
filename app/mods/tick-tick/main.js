@@ -7,7 +7,7 @@
 // task (task.js), settings, help and first-run setup (pages.js).
 
 import { View } from "gpui-kit";
-import { v_flex, InputState } from "gpui-base";
+import { v_flex, InputState, TextareaState } from "gpui-base";
 import { theme, nextCommand } from "herdr";
 import * as ticktick from "./ticktick.js";
 import { parseQuery, defaultsFor, findList, allDay, today } from "./query.js";
@@ -33,12 +33,15 @@ export default class TickTickPanel extends View {
     this.add = InputState.new({ placeholder: "Add a task" });
     this.add.on("submit", (_e, cx) => this.addTask(cx));
     this.adding = false;
+    this.addPriority = null; // picked in the add row; null: the view's default
+    this.addPriorityOpen = false;
     this.sortOpen = false;
     this.completing = new Set(); // task ids checked, on their way out
     // The task page.
     this.detailId = null;
     this.picker = null; // "list" | "due" | "priority"
     this.editError = null;
+    this.edit = null; // { key, state, original, save }: the text being edited in place
     // Settings.
     this.draft = null;
     try {
@@ -180,7 +183,8 @@ export default class TickTickPanel extends View {
     if (!title || !target || this.adding) return;
     const d = defaultsFor(v.query);
     const fields = { title, projectId: target.id };
-    if (d.priority !== null) fields.priority = d.priority;
+    const priority = this.addPriority ?? d.priority;
+    if (priority !== null) fields.priority = priority;
     if (d.tags.length) fields.tags = d.tags;
     if (d.due !== null) Object.assign(fields, allDay(today() + d.due), { timeZone: this.timeZone });
     this.adding = true;
@@ -189,6 +193,7 @@ export default class TickTickPanel extends View {
       try {
         const saved = await ticktick.create(fields);
         this.add.set_value("");
+        this.addPriority = null;
         if (saved?.id) this.data.tasks.push(saved);
         this.banner = null;
       } catch (e) {
@@ -223,7 +228,7 @@ export default class TickTickPanel extends View {
     this.data.tasks = this.data.tasks.map((t) => (t.id === saved.id ? { ...t, ...saved } : t));
   }
 
-  /** Priority, due date or checklist: `patch` holds the Task fields to set. */
+  /** Any of a task's fields: `patch` holds the Task fields to set. */
   change(task, patch, cx) {
     this.picker = null;
     this.editError = null;
@@ -255,9 +260,47 @@ export default class TickTickPanel extends View {
     cx.notify();
   }
 
+  /**
+   * Turns a piece of the task page into an editor. Enter saves a one-line
+   * text (the editor wraps, so Enter arrives as a newline); notes take
+   * newlines and save on Cmd-Enter. Leaving the editor saves; Escape doesn't.
+   */
+  startEdit(key, value, { placeholder, multiline, save }, cx) {
+    if (this.edit?.key === key) return;
+    this.finishEdit(true, cx);
+    const state = TextareaState.new({ placeholder, value });
+    state.set_auto_grow(1, multiline ? 20 : 6);
+    const edit = { key, state, original: value, save };
+    state.on("change", (_e, cx) => {
+      const text = state.value();
+      if (multiline || !/[\r\n]/.test(text)) return;
+      state.set_value(text.replace(/[\r\n]+/g, ""));
+      if (this.edit === edit) this.finishEdit(true, cx);
+    });
+    state.on("submit", (e, cx) => {
+      if (this.edit === edit && (!multiline || e.secondary)) this.finishEdit(true, cx);
+    });
+    state.on("blur", (_e, cx) => {
+      if (this.edit === edit) this.finishEdit(true, cx);
+    });
+    this.edit = edit;
+    state.focus();
+    cx.notify();
+  }
+
+  finishEdit(save, cx) {
+    const edit = this.edit;
+    if (!edit) return;
+    this.edit = null;
+    const value = edit.state.value();
+    if (save && value !== edit.original) edit.save(value, cx);
+    cx.notify();
+  }
+
   // ---- pages --------------------------------------------------------------
 
   openTask(id, cx) {
+    this.finishEdit(true, cx);
     this.page = "task";
     this.detailId = id;
     this.picker = null;
@@ -266,6 +309,7 @@ export default class TickTickPanel extends View {
   }
 
   back(cx) {
+    this.finishEdit(true, cx);
     this.page = "list";
     this.picker = null;
     this.draft = null;

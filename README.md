@@ -11,8 +11,9 @@ list's sections, and any other view shows date sections (Overdue, Today,
 Tomorrow, Next 7 Days, Later, No Date). Within a section, tasks are sorted by
 priority unless you pick another order.
 
-From the panel you can complete a task, add one, and change a task's list,
-due date, priority and checklist. You can also open it in TickTick.
+From the panel you can complete a task, add one with its priority, and change
+a task's title, list, due date, priority, checklist and notes. You can also
+open it in TickTick.
 
 | A list's own sections | A task |
 |---|---|
@@ -106,7 +107,8 @@ The help button (`?`) in the panel shows the same table.
 - **Add a task** (Enter) adds a task to the view's list, or to the Inbox when
   the view has no single list. The list's name shows at the right of the box.
   The new task also takes the view's priority, tags and due day (today for
-  `due:today`), so it shows up in the view.
+  `due:today`), so it shows up in the view. The flag at the left of the box
+  picks another priority for the next task.
 - **Sort** sets the order within each section, one choice per view:
   - **Priority** (the default): high first, then by due date.
   - **Due date**: earliest first, then by priority.
@@ -125,7 +127,9 @@ The help button (`?`) in the panel shows the same table.
   - the due date (red when it's overdue).
 - **Click a task** to open its page. There you can change the list, due date
   (Today, Tomorrow, Next week, No date) and priority, tick checklist items,
-  read its notes, and open it in TickTick.
+  and open it in TickTick. Click the title, a checklist item or the notes to
+  edit them in place. Enter saves a title or an item, Cmd-Enter saves the
+  notes, clicking away saves too, and Escape cancels.
 
 The panel refreshes when it opens, when you click refresh, and every two
 minutes. A completed repeating task comes back with its next date.

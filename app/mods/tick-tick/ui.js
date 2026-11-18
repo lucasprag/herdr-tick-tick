@@ -2,7 +2,8 @@
 // checkbox.
 
 import { div, svg } from "gpui-kit";
-import { h_flex } from "gpui-base";
+import { v_flex, h_flex } from "gpui-base";
+import { PRIORITY_LABELS } from "./query.js";
 
 export const ICONS = "mods/tick-tick";
 export const icon = (name) => svg(`${ICONS}/${name}.svg`);
@@ -62,4 +63,30 @@ export function checkbox(t, id, priority, onClick, opts = {}) {
       .flex().items_center().justify_center()
       .when(!opts.done, (el) => el.hover((s) => s.bg(t.hover)))
       .when(Boolean(opts.done), (el) => el.bg(color).child(icon("check").size(11).text_color("#ffffff"))));
+}
+
+export const PRIORITY_ORDER = [5, 3, 1, 0];
+
+export const plain = (t, text, color) => div().min_w(0).truncate().text_color(color ?? t.foreground).child(text);
+
+/** A popover menu's box. */
+export function menuFrame(t, id, children) {
+  return v_flex().id(id).w(220).max_h(320).py(4).overflow_y_scrollbar()
+    .bg(t.popover).border_1().border_color(t.border).shadow_lg().text_size(12.5).children(children);
+}
+
+/** One menu line, with a check when it's the current choice. */
+export function menuOption(t, id, current, content, onPick) {
+  return h_flex().id(id).h(28).flex_none().px(10).gap(8).items_center().cursor_pointer()
+    .hover((s) => s.bg(t.hover))
+    .on_click((_e, cx) => onPick(cx))
+    .child(h_flex().flex_1().min_w(0).gap(8).items_center().children(content))
+    .when(current, (el) => el.child(icon("check").size(12).flex_none().text_color(t.foreground)));
+}
+
+/** High, Medium, Low, None, each with its flag. */
+export function priorityMenu(t, id, current, onPick) {
+  return menuFrame(t, id, PRIORITY_ORDER.map((p) => menuOption(t, `${id}-${p}`, p === current,
+    [flag(t, p), plain(t, PRIORITY_LABELS[p])],
+    (cx) => onPick(p, cx))));
 }
