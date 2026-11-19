@@ -17,7 +17,7 @@ The panel fills a block, normally a side panel stack about 368px wide. It sits o
   - **Section header**, 30px, filled faint: a chevron, the name (semibold) and the count (`dim`). Click it to collapse the section; collapsing is remembered per view.
   - **Task line**, 31px, with a `hover` background. From left to right:
     - a 14px checkbox with rounded corners (3), bordered in the priority's color: high `#d52b24`, medium `#faa80c`, low `#4772fa`, none `dim`; checked, it fills with that color and shows a white check
-    - the title (12.8, medium, truncates)
+    - the title on one line (12.8, medium, truncates): line breaks become spaces and a Markdown link shows its text
     - "in <parent>" for a subtask
     - the checklist progress `2/5` (11, `dim`)
     - the list's name (11.5, `dim`), only when the view isn't one list

@@ -3,7 +3,7 @@
 
 import { div } from "gpui-kit";
 import { v_flex, h_flex, Input, Popover } from "gpui-base";
-import { SORTS, sections, dueLabel, today, dateSection, defaultsFor, PRIORITY_LABELS } from "./query.js";
+import { SORTS, sections, dueLabel, today, dateSection, defaultsFor, oneLine, PRIORITY_LABELS } from "./query.js";
 import { readPrefs, writePrefs, selectedView, setSort } from "./prefs.js";
 import { icon, iconButton, checkbox, faint, faintOn, flag, priorityMenu } from "./ui.js";
 
@@ -129,8 +129,8 @@ function taskLine(view, t, task, opts) {
       view.complete(task, cx);
     }, { done, tip: "Complete" }))
     .child(h_flex().flex_1().min_w(0).gap(6).items_center()
-      .child(div().min_w(0).truncate().text_size(12.8).font_medium().text_color(t.foreground).child(task.title || "Untitled"))
-      .when(Boolean(parent), (el) => el.child(div().flex_none().max_w(110).truncate().text_size(11.5).text_color(t.dim).child(`in ${parent.title}`)))
+      .child(div().min_w(0).truncate().text_size(12.8).font_medium().text_color(t.foreground).child(oneLine(task.title) || "Untitled"))
+      .when(Boolean(parent), (el) => el.child(div().flex_none().max_w(110).truncate().text_size(11.5).text_color(t.dim).child(`in ${oneLine(parent.title)}`)))
       .when(items.length > 0, (el) => el.child(div().flex_none().text_size(11).text_color(t.dim)
         .child(`${items.filter((i) => i.status).length}/${items.length}`))))
     .when(opts.showList, (el) => el.child(div().flex_none().max_w(90).truncate().text_size(11.5).text_color(t.dim).child(view.listName(task))))

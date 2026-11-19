@@ -251,6 +251,12 @@ export function allDay(day) {
   return { startDate: date, dueDate: date, isAllDay: true };
 }
 
+/** A title as one line: a Markdown link shows its text, and line breaks and
+ *  runs of spaces become one space. A fixed-height row can't hold a second line. */
+export function oneLine(title) {
+  return String(title ?? "").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/\s+/g, " ").trim();
+}
+
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 

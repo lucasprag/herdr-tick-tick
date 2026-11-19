@@ -3,7 +3,7 @@ process.env.TZ = "America/Toronto";
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseQuery, parseDate, dayNumber, dueDay, dateSection, sortTasks, sections, findList, tokenize, splitValues, defaultsFor, allDay, dueLabel } from "../app/mods/tick-tick/query.js";
+import { parseQuery, parseDate, dayNumber, dueDay, dateSection, sortTasks, sections, findList, tokenize, splitValues, defaultsFor, allDay, dueLabel, oneLine } from "../app/mods/tick-tick/query.js";
 
 // Thursday, Nov 12, 2026, 10:00 in Toronto.
 const NOW = dayNumber(Date.UTC(2026, 10, 12, 15));
@@ -154,4 +154,11 @@ test("dueLabel", () => {
   assert.equal(dueLabel(task({ dueDate: due(3), isAllDay: true }), NOW), "Nov 3");
   assert.equal(dueLabel(task({ dueDate: "2026-11-12T19:30:00.000+0000", isAllDay: false }), NOW), "Today 14:30");
   assert.equal(dueLabel(task({}), NOW), "");
+});
+
+test("oneLine", () => {
+  assert.equal(oneLine("[Aaron Patterson\n244 likes · 8 replies](https://x.com/a/status/1?s=46)"), "Aaron Patterson 244 likes · 8 replies");
+  assert.equal(oneLine("  first\r\n\tsecond  "), "first second");
+  assert.equal(oneLine("see [docs](https://a.b) and [x](y)"), "see docs and x");
+  assert.equal(oneLine(undefined), "");
 });
